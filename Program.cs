@@ -39,25 +39,25 @@ namespace BlazeLBLiveFetcher {
             if (bIOFailure) Console.WriteLine("Couldn't fetch entries...");
             else {
                 Console.WriteLine($"Fetched {res.m_cEntryCount} entries from leaderboard {res.m_hSteamLeaderboard}...");
-                Console.WriteLine(res.m_cEntryCount);
-                Console.WriteLine(res.m_hSteamLeaderboard);
-                Console.WriteLine(res.m_hSteamLeaderboardEntries);
 
                 LeaderboardEntry_t[] entries = new LeaderboardEntry_t[res.m_cEntryCount];
 
                 for (int i = 0; i < res.m_cEntryCount; i++) {
                     int[] details = new int[3];
                     SteamUserStats.GetDownloadedLeaderboardEntry(res.m_hSteamLeaderboardEntries, i, out entries[i], details, 3).ToString();
+                    Console.WriteLine(details[0].ToString() + " " + details[1].ToString() + " " + details[2].ToString());
                 }
+
+
 
                 Entry[] exportEntries = new Entry[res.m_cEntryCount];
 
-                for (int i = 0; i < res.m_cEntryCount; i++) exportEntries[i] = new Entry(entries[i].m_nGlobalRank, entries[i].m_steamIDUser.ToString(), entries[i].m_nScore);
+                for (int i = 0; i < res.m_cEntryCount; i++) exportEntries[i] = new Entry(entries[i].m_nGlobalRank, entries[i].m_steamIDUser.ToString(), SteamFriends.GetFriendPersonaName(entries[i].m_steamIDUser), entries[i].m_nScore);
 
                 var lb = new Leaderboard(exportEntries);
 
                 string json = JsonSerializer.Serialize(lb);
-                File.WriteAllText(Environment.CurrentDirectory + "/live.json", json);
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/live.json", json);
 
                 Console.WriteLine("Finished writing json to file!");
             }
@@ -75,15 +75,14 @@ namespace BlazeLBLiveFetcher {
         {
             public int rank { get; set; }
             public string steamid { get; set; }
+            public string name { get; set; }
             public int score { get; set; }
-            public Entry(int _rank, string _steamid, int _score) {
+            public Entry(int _rank, string _steamid, string _name, int _score) {
                 rank = _rank;
                 steamid = _steamid;
+                name = _name;
                 score = _score;
             }
         }
-
     }
-
-
 }
