@@ -17,4 +17,5 @@ public static class Config {
 ## Running
 Steam needs to be running and logged into to be able to interface with steamworks.
 > BlazeChameleon --listen --port=8080
+
 Use BlazeChameleon --help for more info
