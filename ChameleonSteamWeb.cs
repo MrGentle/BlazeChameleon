@@ -22,7 +22,7 @@ namespace BlazeChameleon {
 			}
         }
 
-        public static SteamWebInterfaceFactory SteamWeb = new SteamWebInterfaceFactory(Config.SteamWebAPIKeys[1]);
+        public static SteamWebInterfaceFactory SteamWeb = new SteamWebInterfaceFactory(Config.STEAM_WEB_API_KEYS[1]);
 
         public static async Task<ChameleonCall> GetPlayerSummaries(ulong[] steamIDs) {
             int batches = (int)Math.Ceiling(steamIDs.Length / 100f);

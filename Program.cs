@@ -49,7 +49,7 @@ namespace BlazeChameleon {
                         "   -l\n" +
                         "   --listen\n" +
                         "   Optional params: --port --secret --debug\n" +
-                        "   Usage: -l --port=\"8080\" --secret=\"yoursecret\" --debug\n" +
+                        "   Usage: -l --port=8080 --secret=\"yoursecret\" --debug\n" +
                         "\n" +
                         "------------------------------------------\n"
                     );
