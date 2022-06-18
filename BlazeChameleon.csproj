@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Grapevine" Version="5.0.0-rc.10" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Pastel" Version="3.0.0" />
     <PackageReference Include="SteamWebAPI2" Version="4.3.2" />
   </ItemGroup>
 

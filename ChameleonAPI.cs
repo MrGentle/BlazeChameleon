@@ -7,8 +7,8 @@ using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Pastel;
 
 namespace BlazeChameleon {
 	class ChameleonAPI {
@@ -26,11 +26,11 @@ namespace BlazeChameleon {
                 server.Locals.TryAdd("secret", _secret);
 
                 ChameleonSteamWeb.GenerateSteamWebFactories();
-                ChameleonSteamWeb.CheckAPIKeyHealth();
+                ChameleonSteamWeb.CheckAPIKeyHealth().Wait();
 
                 server.Start();
 
-                Console.WriteLine($"BlazeChameleon is listening on port {_port}...");
+                Log.System($"BlazeChameleon is listening on port {_port}...".Pastel("#ffff00"));
                 
                 while(true) {};
 			}
@@ -121,7 +121,7 @@ namespace BlazeChameleon {
 		}
 
         public static async Task LogMatchedRoute(IHttpContext context) {
-            Console.WriteLine($"Received request for {context.Request.Endpoint} from {context.Request.RemoteEndPoint}");
+            Log.Info($"Received request for {context.Request.Endpoint} from {context.Request.RemoteEndPoint}");
 		}
 
         public static async Task Authorize(IHttpContext context) {
@@ -194,15 +194,25 @@ namespace BlazeChameleon {
 		}
 	}
 
-    public static class Debug {
-        public static void Log(dynamic data, [CallerMemberName] string callerName = "") {
-            StackTrace stackTrace = new StackTrace(); 
-            if (ChameleonAPI.debug) Console.WriteLine($" [DEBUG] {callerName} : {data}");
+    public static class Log {
+        public static void Debug(dynamic data, [CallerMemberName] string callerName = "") {
+            if (ChameleonAPI.debug) Console.WriteLine(" " + "[DEBUG]".Pastel("#000000").PastelBg("#ffffff") + $" {callerName} : {data}");
 		}
 
-        public static void LogInfo(dynamic data, [CallerMemberName] string callerName = "") {
-            StackTrace stackTrace = new StackTrace(); 
+        public static void Info(dynamic data, [CallerMemberName] string callerName = "") {
             Console.WriteLine($" [INFO] {callerName} : {data}");
+		}
+
+        public static void System(dynamic data, [CallerMemberName] string callerName = "") {
+            Console.WriteLine(" " + "[SYSTEM]".Pastel("#000000").PastelBg("#FFFFFF") + $" {callerName} : {data}");
+		}
+
+        public static void Warning(dynamic data, [CallerMemberName] string callerName = "") {
+            Console.WriteLine(" " + "[WARNING]".Pastel("#FF0000").PastelBg("#FFFFFF") + $" {callerName} : {data}");
+		}
+
+        public static void Error(dynamic data, [CallerMemberName] string callerName = "") {
+            Console.WriteLine(" " + "[ERROR]".Pastel("#000000").PastelBg("#FF0000") + $" {callerName} : {data}");
 		}
     }
     

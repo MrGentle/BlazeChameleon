@@ -5,7 +5,7 @@ namespace BlazeChameleon {
     class Program {
         static int Main(string[] args) {
             if (args.Length == 0) {
-                Console.WriteLine("Please supply BlazeChameleon with arguments (\"blazechameleon --help\" for more info)");
+                Log.Error("Please supply BlazeChameleon with arguments (\"blazechameleon --help\" for more info)");
                 return 0;
             }
 
@@ -18,7 +18,7 @@ namespace BlazeChameleon {
                     if (args.Length > 1) {
                         foreach(string arg in args) {
                             if (arg.StartsWith("--port")) {
-                                if (!int.TryParse(arg.Replace("--port=", ""), out port)) Console.WriteLine("Could not assign port, using 23451");
+                                if (!int.TryParse(arg.Replace("--port=", ""), out port)) Log.Warning("Could not assign port, using 23451");
                             }
 
                             if (arg.StartsWith("--secret")) secret = arg.Replace("--secret=", "").Replace("\"", "");

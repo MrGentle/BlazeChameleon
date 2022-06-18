@@ -5,13 +5,14 @@ using SteamWebAPI2.Interfaces;
 using SteamWebAPI2.Utilities;
 using System.Linq;
 using Steam.Models.SteamCommunity;
+using Pastel;
 
 namespace BlazeChameleon {
 	public class ChameleonSteamWeb {
         /*
          * Reset the call counter on date change
         */
-        public static int callsToday = 100000;
+        public static int callsToday = 0;
         public static int callLimit = 100_000;
         public static DateTime today = new DateTime();
 
@@ -30,7 +31,7 @@ namespace BlazeChameleon {
             for (var i = 0; i < Config.STEAM_WEB_API_KEYS.Length; i++) {
                 SteamWebFactories[i] = new SteamWebInterfaceFactory(Config.STEAM_WEB_API_KEYS[i]);
 			}
-            Debug.Log($"Generated {SteamWebFactories.Length} steam web factories");
+            Log.Debug($"Generated {SteamWebFactories.Length} steam web factories");
 		}
 
         /*
@@ -46,26 +47,28 @@ namespace BlazeChameleon {
             if (callsToday >= callLimit * SteamWebFactories.Length) throw new Exception("Steam Web API call limit reached");
 		}
 
-        public static async void CheckAPIKeyHealth() {
+        public static async Task CheckAPIKeyHealth() {
             List<SteamWebInterfaceFactory> factoriesList = SteamWebFactories.ToList();
-            Debug.LogInfo($"Checking API keys");
+            Log.System($"Checking API keys");
             var i = 0;
+            var dropped = 0;
             foreach (var factory in factoriesList.ToArray()) {
                 i++;
                 try {
                     var userStats = factory.CreateSteamWebInterface<SteamUserStats>();
                     var response = await userStats.GetSchemaForGameAsync(Config.APP_ID, "english");
                     callsToday++;
-                    Debug.LogInfo($"API Key {i} OK");
+                    Log.Info($"API Key {i} OK".Pastel("#22dd22"));
                 } catch {
                     factoriesList.Remove(factory);
-                    Debug.LogInfo($"API Key {i} needs renewal, dropping factory");
+                    dropped++;
+                    Log.Warning($"API Key {i} needs renewal, dropping factory".Pastel("#dd2222"));
 				}
 
 			}
 
             SteamWebFactories = factoriesList.ToArray();
-            Debug.Log($"Factory count after api key check {SteamWebFactories.Length}");
+            Log.System($"Finalizing with {SteamWebFactories.Length} factories. Dropped {dropped}");
 		}
 
 

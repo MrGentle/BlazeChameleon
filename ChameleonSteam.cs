@@ -12,7 +12,7 @@ namespace BlazeChameleon {
                     SteamClient.Init(Config.APP_ID);
                 }
                 catch (Exception e) {
-                    Console.WriteLine($"Failed initializing steam client:\n{e.Message}");
+                    Log.Error($"Failed initializing steam client:\n{e.Message}");
                 }
             }
 		}
