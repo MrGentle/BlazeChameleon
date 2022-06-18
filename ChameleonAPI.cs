@@ -28,8 +28,6 @@ namespace BlazeChameleon {
 
                 server.Start();
 
-                //LobbyData.StartGather(TimeSpan.FromSeconds(2));
-
                 Console.WriteLine($"BlazeChameleon is listening on port {_port}...");
                 
                 while(true) {};
@@ -50,14 +48,6 @@ namespace BlazeChameleon {
                 ChameleonCall res = await ChameleonSteam.GetLeaderboard(context.Request.PathParameters["leaderboardname"]);
                 context.Locals.TryAdd("data", res);
             }
-
-            /* We give up on this for now
-             * LLB seems to close lobbies when a game starts
-            [RestRoute("Get", "/api/matchmaking/lobbies")] //Get all lobbies
-            public async Task GetLobbies(IHttpContext context) {
-                ChameleonCall res = ChameleonSteam.GetLobbyCounts();
-                context.Locals.TryAdd("data", res);
-            }*/
 
             [RestRoute("Get", "/api/users/stats/{steamid}")] //Get user stats
             public async Task GetGlobalStats(IHttpContext context) {

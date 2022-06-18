@@ -46,14 +46,6 @@ namespace BlazeChameleon {
 				} else return entriesCall;
 			} else return leaderboardCall;
         }
-
-        /* We give up on this for now
-         * LLB seems to close a lobby when a game starts
-        public static ChameleonCall GetLobbyCounts() {
-            return new ChameleonCall(true, LobbyData.GetLobbies());
-        }*/
-
-        
         
         
         public struct ChameleonLeaderboard {
@@ -93,102 +85,4 @@ namespace BlazeChameleon {
 		}
 	}
 
-    /* We give up on this for now
-     * LLB seems to close a lobby when a game starts
-    public static class LobbyData {
-        private static List<Lobby> CachedLobbies = new List<Lobby>();
-        private static Dictionary<string, int> PlayerCounts = new Dictionary<string, int>() {{"ranked", 0 }, {"quickplay", 0}};
-            
-        private static CancellationTokenSource CancelGather = new CancellationTokenSource();
-        public static bool IsGathering = false;
-
-        public static bool StartGather(TimeSpan interval) {
-            ChameleonSteam.InitializeSteam();
-            Action<Lobby> checkLobbyExists = (Lobby q) => {
-                Debug.Log(q.MemberCount);
-                var data = q.Data;
-                foreach (var dataw in q.Data) {
-                    Debug.Log(dataw);
-				}
-                try {
-                    if (data == null) {
-                        var existingLobby = CachedLobbies.FindIndex(lobby => lobby.Id.Value == q.Id.Value);
-                        if (existingLobby != -1) { 
-                            CachedLobbies.RemoveAt(existingLobby);
-                            Debug.Log("Removed Lobby");
-                        }
-                    }
-                } catch (Exception ex) {
-                    Debug.Log(ex.Message);
-				}
-		    };
-
-            Action<Lobby, Friend, string> ost = (Lobby q, Friend f, string msg) => {
-                Debug.Log("MSG RECEIVED");
-                Debug.Log(q);
-                Debug.Log(f);
-                Debug.Log(msg);
-		    };
-
-            SteamMatchmaking.OnLobbyDataChanged += checkLobbyExists;
-            SteamMatchmaking.OnChatMessage += ost;
-            try {
-                if (!IsGathering) GatherLobbyData(interval, CancelGather.Token);
-                IsGathering = true;
-                return true;
-            } catch (Exception ex) {
-                Console.WriteLine(ex);
-                return false;
-			}
-		}
-
-
-        public static void StopGather() {
-            if (IsGathering) CancelGather.Cancel();
-		}
-
-        public static Dictionary<string, int> GetCounts() {
-            return PlayerCounts;
-		}
-
-        public static List<Lobby> GetLobbies() {
-            return CachedLobbies;
-		}
-
-        private static async Task GetPlayerCounts() {
-            PlayerCounts["ranked"] = 0;
-            PlayerCounts["quickplay"] = 0;
-
-            foreach(Lobby lobby in CachedLobbies.ToArray()) {
-                var success = lobby.Refresh();
-                Debug.Log("Refresh success " + success.ToString());
-                Debug.Log(lobby.GetData("hs"));
-
-                if (lobby.GetData("st") == "4") PlayerCounts["ranked"] += lobby.MemberCount;
-                else if (lobby.MaxMembers == 4) PlayerCounts["quickplay"] += lobby.MemberCount;
-			}
-
-			LobbyQuery query = SteamMatchmaking.LobbyList;
-            Lobby[] lobbies = await query.RequestAsync();
-
-            if (lobbies != null) {
-                foreach(Lobby lobby in lobbies) {
-                    var cachedLobby = CachedLobbies.Exists(cached => lobby.Id.Value == cached.Id.Value);
-                    if (!cachedLobby) CachedLobbies.Add(lobby);
-                }
-            }; 
-		}
-
-        private static async Task GatherLobbyData(TimeSpan interval, CancellationToken cancellationToken) {
-            while (true) {
-                await GetPlayerCounts();
-                await Task.Delay(interval);
-                Debug.Log("Gathering lobby data");
-                if (cancellationToken.IsCancellationRequested) { 
-                    IsGathering = false;
-                    return;
-                }
-			}
-		}
-    }*/
 }
