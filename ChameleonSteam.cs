@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Steamworks;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.IO;
 using System.Threading.Tasks;
 using Steamworks.Data;
-using System.Threading;
 
 namespace BlazeChameleon {
 	public class ChameleonSteam {
@@ -18,7 +12,7 @@ namespace BlazeChameleon {
                     SteamClient.Init(Config.APP_ID);
                 }
                 catch (Exception e) {
-                    Console.WriteLine($"Failed initializing client:\n{e.Message}");
+                    Console.WriteLine($"Failed initializing steam client:\n{e.Message}");
                 }
             }
 		}

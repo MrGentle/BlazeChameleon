@@ -1,30 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Grapevine;
-using System.Threading;
 using System.Threading.Tasks;
-using BlazeChameleon;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace BlazeChameleon {
 	class ChameleonAPI {
         public static IRestServer server { get; set; }
         public static bool debug = false;
 
+        /*
+         * Builds and starts the Grapevine REST client 
+        */
         public static void InitializeClient(int _port, string _secret) {
             using (server = debug ? RestServerBuilder.UseDefaults().Build() : RestServerBuilder.From<Startup>().Build()) {
                 server.Prefixes.Add($"http://+:{_port}/");
-                if (_secret != "") {
-                    server.BeforeRoutingSubscriber();
-                    server.AfterRoutingSubscriber();
-                    server.Locals.TryAdd("secret", _secret);
-                }
+                server.BeforeRoutingSubscriber();
+                server.AfterRoutingSubscriber();
+                server.Locals.TryAdd("secret", _secret);
+
+                ChameleonSteamWeb.GenerateSteamWebFactories();
+                ChameleonSteamWeb.CheckAPIKeyHealth();
 
                 server.Start();
 
@@ -36,26 +38,42 @@ namespace BlazeChameleon {
 
         public class Startup {
             public void ConfigureServices(IServiceCollection services) {
-                if (!debug) services.AddLogging(logging => logging.ClearProviders());
+                services.AddLogging(logging => logging.ClearProviders());
             }
         }
 
 
 		[RestResource]
         public class Routes {
-            [RestRoute("Get", "/api/leaderboards/{leaderboardname}")] //Get full leaderboard by leaderboardname
+            /* 
+             * Returns a full leaderboard with entries
+             * Supply it with a leaderboard name
+            */
+            [RestRoute("Get", "/api/leaderboards/{leaderboardname}")]
             public async Task GetLeaderboard(IHttpContext context) {
                 ChameleonCall res = await ChameleonSteam.GetLeaderboard(context.Request.PathParameters["leaderboardname"]);
                 context.Locals.TryAdd("data", res);
             }
 
-            [RestRoute("Get", "/api/users/stats/{steamid}")] //Get user stats
+            /*
+             * Returns a spesific users stats
+             * Supply it with a steam user id
+            */
+            [RestRoute("Get", "/api/users/stats/{steamid}")]
             public async Task GetGlobalStats(IHttpContext context) {
-                ChameleonCall res = await ChameleonSteamWeb.GetUserStats(ulong.Parse(context.Request.PathParameters["steamid"]));
-                context.Locals.TryAdd("data", res);
+                var parseok = ulong.TryParse(context.Request.PathParameters["steamid"], out ulong steamid);
+                if (parseok) {
+                    ChameleonCall res = await ChameleonSteamWeb.GetUserStats(steamid);
+                    context.Locals.TryAdd("data", res);
+                } else {
+                    await context.Response.SendResponseAsync($"Failed converting steamid to ulong").ConfigureAwait(false);
+				}
             }
 
-            //Users
+            /*
+             * Returns N users summaries
+             * Supply it with an array of steam user ids
+            */
             [RestRoute("Post", "/api/users/summaries")]
             public async Task GetUserStats(IHttpContext context) {
                 try {
@@ -68,17 +86,19 @@ namespace BlazeChameleon {
 				}
             }
 
+            /*
+             * Returns number of users playing the game as reported by steam 
+            */
             [RestRoute("Get", "/api/users/count")]
             public async Task GetUserCount(IHttpContext context) {
                 ChameleonCall res = await ChameleonSteam.GetUserCount();
                 context.Locals.TryAdd("data", res);
             }
         }
-
-        
 	}
 
     public static class IRestServerExtensions {
+        //Middleware before routing
         public static void BeforeRoutingSubscriber(this IRestServer server) {
             server.Router.BeforeRoutingAsync += LogMatchedRoute;
             server.Router.BeforeRoutingAsync += Authorize;
@@ -105,14 +125,15 @@ namespace BlazeChameleon {
 		}
 
         public static async Task Authorize(IHttpContext context) {
-            string localSecret = (string)ChameleonAPI.server.Locals.Get("secret");
+            string localSecret = ChameleonAPI.server.Locals.GetAs<string>("secret");
             string remoteSecret = context.Request.Headers.Get("secret");
-            if (remoteSecret != localSecret) { 
+            if (localSecret != "" && remoteSecret != localSecret) { 
                 await context.Response.SendResponseAsync("Not Authorized.").ConfigureAwait(false);
                 throw new UnauthorizedAccessException();
             }
         }
 
+        //Middleware after routing
         public static void AfterRoutingSubscriber(this IRestServer server) {
             server.Router.AfterRoutingAsync += SendResponse;
             server.Router.AfterRoutingAsync += HandleSteamWeb;
@@ -174,8 +195,14 @@ namespace BlazeChameleon {
 	}
 
     public static class Debug {
-        public static void Log(dynamic data) {
-            if (ChameleonAPI.debug) Console.WriteLine($" [DEBUG] : {data}");
+        public static void Log(dynamic data, [CallerMemberName] string callerName = "") {
+            StackTrace stackTrace = new StackTrace(); 
+            if (ChameleonAPI.debug) Console.WriteLine($" [DEBUG] {callerName} : {data}");
+		}
+
+        public static void LogInfo(dynamic data, [CallerMemberName] string callerName = "") {
+            StackTrace stackTrace = new StackTrace(); 
+            Console.WriteLine($" [INFO] {callerName} : {data}");
 		}
     }
     

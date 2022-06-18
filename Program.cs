@@ -1,12 +1,4 @@
 ﻿using System;
-using Steamworks;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Threading;
-using Grapevine;
 
 namespace BlazeChameleon {
 
@@ -36,7 +28,6 @@ namespace BlazeChameleon {
 					}
 
                     ChameleonAPI.InitializeClient(port, secret);
-
                     break;
 
                 case "-h":
@@ -56,12 +47,7 @@ namespace BlazeChameleon {
 
                     return 0;
 			}
-
-
             return 1;
         }
-
-
-        
     }
 }
