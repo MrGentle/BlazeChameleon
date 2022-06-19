@@ -7,16 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
     <PackageReference Include="Grapevine" Version="5.0.0-rc.10" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Pastel" Version="3.0.0" />
     <PackageReference Include="SteamWebAPI2" Version="4.3.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Facepunch.Steamworks.Win64">
-      <HintPath>C:\Users\Gentle\Desktop\New folder (9)\netstandard2.0\Facepunch.Steamworks.Win64.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
