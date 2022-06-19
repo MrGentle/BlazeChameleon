@@ -56,7 +56,7 @@ namespace BlazeChameleon {
             }
 
             /*
-             * Returns a spesific users stats
+             * Returns a specific users stats
              * Supply it with a steam user id
             */
             [RestRoute("Get", "/api/users/stats/{steamid}")]

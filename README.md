@@ -2,6 +2,8 @@
 A cross-platform CLI which runs an API/Interface for SteamWorks and SteamWeb. 
 Mainly used for Lethal League Blaze but you should be able to use it for any steam game.
 
+Feel free to contribute.
+
 ## Building
 1. Clone the repository.
 2. Add a static class named Config. Example:
@@ -17,5 +19,7 @@ public static class Config {
 ## Running
 Steam needs to be running and logged into to be able to interface with steamworks.
 > BlazeChameleon --listen --port=8080
+
+You can also supply the ``--secret`` argument to secure your routes with a password.
 
 Use BlazeChameleon --help for more info
