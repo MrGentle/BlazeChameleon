@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 using Pastel;
 
 namespace BlazeChameleon {
-	class ChameleonAPI {
+    class ChameleonAPI {
         public static IRestServer server { get; set; }
         public static bool debug = false;
 
@@ -33,8 +33,8 @@ namespace BlazeChameleon {
                 Log.System($"BlazeChameleon is listening on port {_port}...".Pastel("#ffff00"));
                 
                 while(true) {};
-			}
-		}
+            }
+        }
 
         public class Startup {
             public void ConfigureServices(IServiceCollection services) {
@@ -67,7 +67,7 @@ namespace BlazeChameleon {
                     context.Locals.TryAdd("data", res);
                 } else {
                     await context.Response.SendResponseAsync($"Failed converting steamid to ulong").ConfigureAwait(false);
-				}
+                }
             }
 
             /*
@@ -83,7 +83,7 @@ namespace BlazeChameleon {
                 } catch (Exception ex) {
                     await context.Response.SendResponseAsync($"Failed converting body to ulong array: {ex.Message}").ConfigureAwait(false);
                     return;
-				}
+                }
             }
 
             /*
@@ -95,7 +95,7 @@ namespace BlazeChameleon {
                 context.Locals.TryAdd("data", res);
             }
         }
-	}
+    }
 
     public static class IRestServerExtensions {
         //Middleware before routing
@@ -104,11 +104,11 @@ namespace BlazeChameleon {
             server.Router.BeforeRoutingAsync += Authorize;
             server.Router.BeforeRoutingAsync += StartSteam;
             server.Router.BeforeRoutingAsync += ParseJsonAsync;
-		}
+        }
 
         public static async Task StartSteam(IHttpContext context) {
             await Task.Run(() => ChameleonSteam.InitializeSteam());
-		}
+        }
 
         public static async Task ParseJsonAsync(IHttpContext context) {
             if (context.Request.ContentType != ContentType.Json || !context.Request.HasEntityBody) return;
@@ -118,11 +118,11 @@ namespace BlazeChameleon {
 
             var body = JsonConvert.DeserializeObject(json);
             context.Locals.TryAdd("body", body);
-		}
+        }
 
         public static async Task LogMatchedRoute(IHttpContext context) {
             Log.Info($"Received request for {context.Request.Endpoint} from {context.Request.RemoteEndPoint}");
-		}
+        }
 
         public static async Task Authorize(IHttpContext context) {
             string localSecret = ChameleonAPI.server.Locals.GetAs<string>("secret");
@@ -137,21 +137,21 @@ namespace BlazeChameleon {
         public static void AfterRoutingSubscriber(this IRestServer server) {
             server.Router.AfterRoutingAsync += SendResponse;
             server.Router.AfterRoutingAsync += HandleSteamWeb;
-		}
+        }
 
         public static async Task SendResponse(IHttpContext context) {
             try {
                 ChameleonCall data = (ChameleonCall)context.Locals.Get("data");
                 string json = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                 await context.Response.SendResponseAsync(json).ConfigureAwait(false);
-			} catch(Exception ex) {
+            } catch(Exception ex) {
                 await context.Response.SendResponseAsync(ex.ToString()).ConfigureAwait(false);
-			}
-		}
+            }
+        }
 
         public static async Task HandleSteamWeb(IHttpContext context) {
             ChameleonSteamWeb.HandleDateChange();
-		}
+        }
     }
 
 
@@ -163,12 +163,12 @@ namespace BlazeChameleon {
         public ChameleonCall(bool success, dynamic data) {
             CallSuccess = success;
             Data = data;
-		}
+        }
 
         public ChameleonCall(bool _success, string _err) {
             CallSuccess = _success;
             Error = _err;
-		}
+        }
 
         public static async Task<ChameleonCall> CallAsync<T>(Task<T> task, string errorMsg = "Internal server error", string nullMsg = "Result was null") {
             try { 
@@ -176,8 +176,8 @@ namespace BlazeChameleon {
                 return new ChameleonCall(true, data == null ? nullMsg : data);
             } catch (Exception e) {
                 return new ChameleonCall(false, $"{errorMsg}: {e.Message}");
-			}
-		}
+            }
+        }
 
         public static ChameleonCall Call(Delegate method, string errorMsg = "Internal server error", params object[] parameters) {
             try { 
@@ -185,35 +185,34 @@ namespace BlazeChameleon {
                 return new ChameleonCall(true, data);
             } catch (Exception e) {
                 return new ChameleonCall(false, $"{errorMsg}: {e.Message}");
-			}
-		}
+            }
+        }
 
         public dynamic GetResult() {
             if (CallSuccess) return Data;
             else return Error;
-		}
-	}
+        }
+    }
 
     public static class Log {
         public static void Debug(dynamic data, [CallerMemberName] string callerName = "") {
             if (ChameleonAPI.debug) Console.WriteLine(" " + "[DEBUG]".Pastel("#000000").PastelBg("#ffffff") + $" {callerName} : {data}");
-		}
+        }
 
         public static void Info(dynamic data, [CallerMemberName] string callerName = "") {
             Console.WriteLine($" [INFO] {callerName} : {data}");
-		}
+        }
 
         public static void System(dynamic data, [CallerMemberName] string callerName = "") {
             Console.WriteLine(" " + "[SYSTEM]".Pastel("#000000").PastelBg("#FFFFFF") + $" {callerName} : {data}");
-		}
+        }
 
         public static void Warning(dynamic data, [CallerMemberName] string callerName = "") {
             Console.WriteLine(" " + "[WARNING]".Pastel("#FF0000").PastelBg("#FFFFFF") + $" {callerName} : {data}");
-		}
+        }
 
         public static void Error(dynamic data, [CallerMemberName] string callerName = "") {
             Console.WriteLine(" " + "[ERROR]".Pastel("#000000").PastelBg("#FF0000") + $" {callerName} : {data}");
-		}
+        }
     }
-    
 }

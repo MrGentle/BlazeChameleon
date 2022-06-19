@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Steamworks.Data;
 
 namespace BlazeChameleon {
-	public class ChameleonSteam {
+    public class ChameleonSteam {
 
         public static void InitializeSteam() {
             if (!SteamClient.IsValid || !SteamClient.IsLoggedOn) {
@@ -15,7 +15,7 @@ namespace BlazeChameleon {
                     Log.Error($"Failed initializing steam client:\n{e.Message}");
                 }
             }
-		}
+        }
 
         public static async Task<ChameleonCall> GetUserCount() {
             return await ChameleonCall.CallAsync(SteamUserStats.PlayerCountAsync());
@@ -33,12 +33,12 @@ namespace BlazeChameleon {
                     for (var i = 0; i < chameleonEntries.Length; i++) {
                         LeaderboardEntry entry = entries[i];
                         chameleonEntries[i] = new ChameleonEntry(new ChameleonUser(entry.User), entry.GlobalRank, entry.Score);
-					}
+                    }
 
                     ChameleonLeaderboard finalLB = new ChameleonLeaderboard(lbName, leaderboard.EntryCount, chameleonEntries);
                     return new ChameleonCall(true, finalLB);
-				} else return entriesCall;
-			} else return leaderboardCall;
+                } else return entriesCall;
+            } else return leaderboardCall;
         }
         
         
@@ -76,7 +76,6 @@ namespace BlazeChameleon {
                 NickName = user.Name;
                 IsInGame = user.IsPlayingThisGame;
             }
-		}
-	}
-
+        }
+    }
 }

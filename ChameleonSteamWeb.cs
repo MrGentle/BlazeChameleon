@@ -8,7 +8,7 @@ using Steam.Models.SteamCommunity;
 using Pastel;
 
 namespace BlazeChameleon {
-	public class ChameleonSteamWeb {
+    public class ChameleonSteamWeb {
         /*
          * Reset the call counter on date change
         */
@@ -17,9 +17,9 @@ namespace BlazeChameleon {
         public static DateTime today = new DateTime();
 
         public static void HandleDateChange() {
-		    if (today.Date != DateTime.Now.Date) {
+            if (today.Date != DateTime.Now.Date) {
                 callsToday = 0;
-			}
+            }
         }
 
         /*
@@ -27,12 +27,11 @@ namespace BlazeChameleon {
         */
         public static SteamWebInterfaceFactory[] SteamWebFactories = new SteamWebInterfaceFactory[Config.STEAM_WEB_API_KEYS.Length];
         public static void GenerateSteamWebFactories() {
-            
             for (var i = 0; i < Config.STEAM_WEB_API_KEYS.Length; i++) {
                 SteamWebFactories[i] = new SteamWebInterfaceFactory(Config.STEAM_WEB_API_KEYS[i]);
-			}
+            }
             Log.Debug($"Generated {SteamWebFactories.Length} steam web factories");
-		}
+        }
 
         /*
          * Returns the proper factory to use depending on number of calls performed today 
@@ -41,11 +40,11 @@ namespace BlazeChameleon {
             //Todo make sure we dont surpass allowed calls
             int i = (int)Math.Floor((double)(callsToday/(100_000 + callsToMake)));
             return SteamWebFactories[i];
-		}
+        }
 
         public static void CheckOverCallLimit() {
             if (callsToday >= callLimit * SteamWebFactories.Length) throw new Exception("Steam Web API call limit reached");
-		}
+        }
 
         public static async Task CheckAPIKeyHealth() {
             List<SteamWebInterfaceFactory> factoriesList = SteamWebFactories.ToList();
@@ -63,13 +62,12 @@ namespace BlazeChameleon {
                     factoriesList.Remove(factory);
                     dropped++;
                     Log.Warning($"API Key {i} needs renewal, dropping factory".Pastel("#dd2222"));
-				}
-
-			}
+                }
+            }
 
             SteamWebFactories = factoriesList.ToArray();
             Log.System($"Finalizing with {SteamWebFactories.Length} factories. Dropped {dropped}");
-		}
+        }
 
 
         // API CALLS
@@ -88,12 +86,12 @@ namespace BlazeChameleon {
                     summaries.AddRange(userSummary.Data);
                     await Task.Delay(100);
                     callsToday++;
-				}
+                }
                 
                 return new ChameleonCall(true, summaries.ToArray());
             } catch (Exception e) {
                 return new ChameleonCall(false, $"Steam Web: {e.Message}");
-			}
+            }
         }
 
         public static async Task<ChameleonCall> GetUserStats(ulong steamid) {
@@ -108,8 +106,7 @@ namespace BlazeChameleon {
             }
             catch (Exception e) {
                 return new ChameleonCall(false, $"Steam Web: {e.Message}");
-			}
-		}
-
-	}
+            }
+        }
+    }
 }

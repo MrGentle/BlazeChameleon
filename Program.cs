@@ -24,8 +24,8 @@ namespace BlazeChameleon {
                             if (arg.StartsWith("--secret")) secret = arg.Replace("--secret=", "").Replace("\"", "");
 
                             if (arg.StartsWith("--debug")) ChameleonAPI.debug = true;
-						}
-					}
+                        }
+                    }
 
                     ChameleonAPI.InitializeClient(port, secret);
                     break;
@@ -46,7 +46,7 @@ namespace BlazeChameleon {
                     );
 
                     return 0;
-			}
+            }
             return 1;
         }
     }

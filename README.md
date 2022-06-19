@@ -22,4 +22,4 @@ Steam needs to be running and logged into to be able to interface with steamwork
 
 You can also supply the ``--secret`` argument to secure your routes with a password.
 
-Use BlazeChameleon --help for more info
+Use ``BlazeChameleon --help`` for more info
