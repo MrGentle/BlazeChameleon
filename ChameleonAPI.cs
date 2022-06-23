@@ -26,7 +26,7 @@ namespace BlazeChameleon {
                 server.Locals.TryAdd("secret", _secret);
 
                 ChameleonSteamWeb.GenerateSteamWebFactories();
-                ChameleonSteamWeb.CheckAPIKeyHealth().Wait();
+                ChameleonSteamWeb.Connect();
 
                 server.Start();
 
@@ -49,7 +49,7 @@ namespace BlazeChameleon {
              * Returns a full leaderboard with entries
              * Supply it with a leaderboard name
             */
-            [RestRoute("Get", "/api/leaderboards/{leaderboardname}")]
+            [RestRoute("Get", "/api/steamworks/leaderboards/{leaderboardname}")]
             public async Task GetLeaderboard(IHttpContext context) {
                 ChameleonCall res = await ChameleonSteam.GetLeaderboard(context.Request.PathParameters["leaderboardname"]);
                 context.Locals.TryAdd("data", res);
@@ -59,7 +59,7 @@ namespace BlazeChameleon {
              * Returns a specific users stats
              * Supply it with a steam user id
             */
-            [RestRoute("Get", "/api/users/stats/{steamid}")]
+            [RestRoute("Get", "/api/web/users/stats/{steamid}")]
             public async Task GetGlobalStats(IHttpContext context) {
                 var parseok = ulong.TryParse(context.Request.PathParameters["steamid"], out ulong steamid);
                 if (parseok) {
@@ -74,7 +74,7 @@ namespace BlazeChameleon {
              * Returns N users summaries
              * Supply it with an array of steam user ids
             */
-            [RestRoute("Post", "/api/users/summaries")]
+            [RestRoute("Post", "/api/web/users/summaries")]
             public async Task GetUserStats(IHttpContext context) {
                 try {
                     ulong[] ulongIDs = ((JArray)context.Locals.Get("body")).ToObject<ulong[]>();
@@ -89,7 +89,7 @@ namespace BlazeChameleon {
             /*
              * Returns number of users playing the game as reported by steam 
             */
-            [RestRoute("Get", "/api/users/count")]
+            [RestRoute("Get", "/api/steamworks/users/count")]
             public async Task GetUserCount(IHttpContext context) {
                 ChameleonCall res = await ChameleonSteam.GetUserCount();
                 context.Locals.TryAdd("data", res);
@@ -100,7 +100,7 @@ namespace BlazeChameleon {
     public static class IRestServerExtensions {
         //Middleware before routing
         public static void BeforeRoutingSubscriber(this IRestServer server) {
-            server.Router.BeforeRoutingAsync += LogMatchedRoute;
+            server.Router.BeforeRoutingAsync += MatchedRoute;
             server.Router.BeforeRoutingAsync += Authorize;
             server.Router.BeforeRoutingAsync += StartSteam;
             server.Router.BeforeRoutingAsync += ParseJsonAsync;
@@ -120,8 +120,19 @@ namespace BlazeChameleon {
             context.Locals.TryAdd("body", body);
         }
 
-        public static async Task LogMatchedRoute(IHttpContext context) {
-            Log.Info($"Received request for {context.Request.Endpoint} from {context.Request.RemoteEndPoint}");
+        public static async Task MatchedRoute(IHttpContext context) {
+            string endpoint = context.Request.Endpoint;
+            Log.Info($"Received request for {endpoint} from {context.Request.RemoteEndPoint}");
+
+            //TODO: grab the second part of path as a variable and switch through it
+            if (endpoint.Contains("/api/web/")) {
+                if (!ChameleonSteamWeb.ServiceAvailable) {
+                    if (!ChameleonSteamWeb.Connect()) {
+                        await context.Response.SendResponseAsync("SteamWeb service is not available.").ConfigureAwait(false);
+                        throw new TimeoutException();
+                    }
+				}
+			}
         }
 
         public static async Task Authorize(IHttpContext context) {

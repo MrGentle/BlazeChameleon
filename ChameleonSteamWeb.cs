@@ -15,6 +15,7 @@ namespace BlazeChameleon {
         public static int callsToday = 0;
         public static int callLimit = 100_000;
         public static DateTime today = new DateTime();
+        public static bool ServiceAvailable = false;
 
         public static void HandleDateChange() {
             if (today.Date != DateTime.Now.Date) {
@@ -33,11 +34,17 @@ namespace BlazeChameleon {
             Log.Debug($"Generated {SteamWebFactories.Length} steam web factories");
         }
 
+        public static bool Connect() {
+            if (CheckAPIAvailable()) {
+                CheckAPIKeyHealth().Wait();
+            }
+            return ServiceAvailable;
+		}
+
         /*
          * Returns the proper factory to use depending on number of calls performed today 
         */
         private static SteamWebInterfaceFactory GetFactory(int callsToMake = 0) {
-            //Todo make sure we dont surpass allowed calls
             int i = (int)Math.Floor((double)(callsToday/(100_000 + callsToMake)));
             return SteamWebFactories[i];
         }
@@ -45,6 +52,22 @@ namespace BlazeChameleon {
         public static void CheckOverCallLimit() {
             if (callsToday >= callLimit * SteamWebFactories.Length) throw new Exception("Steam Web API call limit reached");
         }
+
+        public static bool CheckAPIAvailable() {
+            try {
+                Log.Info("Checking Steam Web API status..");
+                var userStats = SteamWebFactories[0].CreateSteamWebInterface<SteamUserStats>();
+                var response = userStats.GetNumberOfCurrentPlayersForGameAsync(Config.APP_ID).Wait(5000);
+                if (!response) throw new TimeoutException();
+                ServiceAvailable = true;
+                Log.Info("Steam Web API is available!");
+                return true;
+            } catch {
+                ServiceAvailable = false;
+                Log.Warning("Steam Web API is currently unavaliable");
+                return false;
+			}
+		}
 
         public static async Task CheckAPIKeyHealth() {
             List<SteamWebInterfaceFactory> factoriesList = SteamWebFactories.ToList();
