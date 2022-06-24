@@ -128,6 +128,7 @@ namespace BlazeChameleon {
             if (endpoint.Contains("/api/web/")) {
                 if (!ChameleonSteamWeb.ServiceAvailable) {
                     if (!ChameleonSteamWeb.Connect()) {
+                        context.Response.StatusCode = 503;
                         await context.Response.SendResponseAsync("SteamWeb service is not available.").ConfigureAwait(false);
                         throw new TimeoutException();
                     }
@@ -139,6 +140,7 @@ namespace BlazeChameleon {
             string localSecret = ChameleonAPI.server.Locals.GetAs<string>("secret");
             string remoteSecret = context.Request.Headers.Get("secret");
             if (localSecret != "" && remoteSecret != localSecret) { 
+                context.Response.StatusCode = 401;
                 await context.Response.SendResponseAsync("Not Authorized.").ConfigureAwait(false);
                 throw new UnauthorizedAccessException();
             }
@@ -154,8 +156,10 @@ namespace BlazeChameleon {
             try {
                 ChameleonCall data = (ChameleonCall)context.Locals.Get("data");
                 string json = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+                if (!data.CallSuccess) context.Response.StatusCode = 500;
                 await context.Response.SendResponseAsync(json).ConfigureAwait(false);
             } catch(Exception ex) {
+                context.Response.StatusCode = 500;
                 await context.Response.SendResponseAsync(ex.ToString()).ConfigureAwait(false);
             }
         }
