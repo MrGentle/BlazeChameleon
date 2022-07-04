@@ -67,13 +67,13 @@ namespace BlazeChameleon {
         }
 
         public struct ChameleonUser {
-            public ulong SteamID { get; set; }
-            public string NickName { get; set; }
+            public string SteamID { get; set; }
+            public string Nickname { get; set; }
             public bool IsInGame { get; set; }
 
             public ChameleonUser(Friend user) {
-                SteamID = user.Id.Value;
-                NickName = user.Name;
+                SteamID = user.Id.Value.ToString();
+                Nickname = user.Name;
                 IsInGame = user.IsPlayingThisGame;
             }
         }
