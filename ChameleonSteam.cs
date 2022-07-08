@@ -6,6 +6,8 @@ using Steamworks.Data;
 namespace BlazeChameleon {
     public class ChameleonSteam {
 
+        public static bool isInitializing = false;
+
         public static void InitializeSteam() {
             if (!SteamClient.IsValid || !SteamClient.IsLoggedOn) {
                 try {
