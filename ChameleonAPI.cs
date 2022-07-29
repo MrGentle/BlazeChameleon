@@ -53,7 +53,7 @@ namespace BlazeChameleon {
             [RestRoute("Get", "/api/steamworks/leaderboards/{leaderboardname}")]
             public async Task GetLeaderboard(IHttpContext context) {
                 ChameleonCall res = await ChameleonSteam.GetLeaderboard(context.Request.PathParameters["leaderboardname"]);
-                if (!context.Locals.TryAdd("data", res));
+                context.Locals.TryAdd("data", res);
             }
 
             /*

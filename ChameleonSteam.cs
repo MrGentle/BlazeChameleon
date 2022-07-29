@@ -5,6 +5,7 @@ using Steamworks.Data;
 
 namespace BlazeChameleon {
     public class ChameleonSteam {
+        public static bool stopOnSteamFail = false;
 
         public static void InitializeSteam() {
             if (!SteamClient.IsValid || !SteamClient.IsLoggedOn) {
@@ -12,7 +13,8 @@ namespace BlazeChameleon {
                     SteamClient.Init(Config.APP_ID);
                 }
                 catch (Exception e) {
-                    Log.Error($"Failed initializing steam client:\n{e.Message}");
+                    if (stopOnSteamFail) throw e;
+                    else Log.Error($"Failed initializing steam client:\n{e.Message}");
                 }
             }
         }

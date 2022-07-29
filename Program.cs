@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace BlazeChameleon {
-
+    
     class Program {
+        public static Dictionary<string, string> argsDict = new Dictionary<string, string>();
+
         static int Main(string[] args) {
             if (args.Length == 0) {
                 Log.Error("Please supply BlazeChameleon with arguments (\"blazechameleon --help\" for more info)");
@@ -18,12 +21,14 @@ namespace BlazeChameleon {
                     if (args.Length > 1) {
                         foreach(string arg in args) {
                             if (arg.StartsWith("--port")) {
-                                if (!int.TryParse(arg.Replace("--port=", ""), out port)) Log.Warning("Could not assign port, using 23451");
+                                if (!int.TryParse(SanitizeArg(arg), out port)) Log.Warning("Could not assign port, using 23451");
                             }
 
-                            if (arg.StartsWith("--secret")) secret = arg.Replace("--secret=", "").Replace("\"", "");
+                            if (arg.StartsWith("--secret")) secret = SanitizeArg(arg);
 
                             if (arg.StartsWith("--debug")) ChameleonAPI.debug = true;
+
+                            if (arg.StartsWith("--stopOnSteamFail")) ChameleonSteam.stopOnSteamFail = true;
                         }
                     }
 
@@ -49,5 +54,18 @@ namespace BlazeChameleon {
             }
             return 1;
         }
+
+        private static string SanitizeArg(string arg) {
+            string sArg = arg;
+
+            if (sArg.Contains("=")) sArg = sArg.Remove(0, sArg.IndexOf("="));
+            
+            if (sArg.Contains("\"")) {
+                if (sArg.StartsWith("\"")) sArg = sArg.Remove(0,1);
+                if (sArg.EndsWith('\"')) sArg.Remove(sArg.Length-1, 1);
+			}
+
+            return sArg;
+		}
     }
 }
