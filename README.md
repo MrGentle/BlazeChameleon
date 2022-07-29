@@ -13,7 +13,10 @@ public static class Config {
     public static string[] STEAM_WEB_API_KEYS = {"Key1", "Key2", ... };
 }
 ```
-3. Build for your target.
+3. Add a reference the proper Facepunch.Steamworks .dll.
+4. Build for your target.
+``dotnet build BlazeChameleon.csproj --runtime linux-x64``
+
 
 
 ## Running

@@ -44,7 +44,7 @@ namespace BlazeChameleon {
                         "\n" +
                         "   -l\n" +
                         "   --listen\n" +
-                        "   Optional params: --port --secret --debug\n" +
+                        "   Optional params: --port --secret --debug --stopOnSteamFail\n" +
                         "   Usage: -l --port=8080 --secret=\"yoursecret\" --debug\n" +
                         "\n" +
                         "------------------------------------------\n"
