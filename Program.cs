@@ -58,7 +58,7 @@ namespace BlazeChameleon {
         private static string SanitizeArg(string arg) {
             string sArg = arg;
 
-            if (sArg.Contains("=")) sArg = sArg.Remove(0, sArg.IndexOf("="));
+            if (sArg.Contains("=")) sArg = sArg.Remove(0, sArg.IndexOf("=") + 1);
             
             if (sArg.Contains("\"")) {
                 if (sArg.StartsWith("\"")) sArg = sArg.Remove(0,1);
