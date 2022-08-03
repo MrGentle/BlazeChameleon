@@ -32,8 +32,9 @@ namespace BlazeChameleon {
                 server.Start();
 
                 Log.System($"BlazeChameleon is listening on port {_port}...".Pastel("#ffff00"));
-                
-                while(true) {};
+
+                Console.WriteLine("Press enter to stop the server");
+                Console.ReadLine();
             }
         }
 
