@@ -12,6 +12,7 @@ namespace BlazeChameleon {
                 return 0;
             }
 
+
             switch (args[0]) {
                 case "-l":
                 case "--listen":
@@ -20,15 +21,35 @@ namespace BlazeChameleon {
 
                     if (args.Length > 1) {
                         foreach(string arg in args) {
-                            if (arg.StartsWith("--port")) {
-                                if (!int.TryParse(SanitizeArg(arg), out port)) Log.Warning("Could not assign port, using 23451");
+                            if (arg != args[0]) {
+                                Argument sanitizedArg = SanitizeArg(arg);
+
+                                switch(sanitizedArg.argument) {
+                                    case "-port":
+                                    case "--port":
+                                        if (!int.TryParse(sanitizedArg.value, out port)) Log.Warning("Could not assign port, using 23451");
+                                        break;
+
+                                    case "-secret":
+                                    case "--secret":
+                                        secret = sanitizedArg.value;
+                                        break;
+
+                                    case "-debug":
+                                    case "--debug":
+                                        ChameleonAPI.debug = true;
+                                        break;
+
+                                    case "-stopOnSteamFail":
+                                    case "--stopOnSteamFail":
+                                        ChameleonSteam.stopOnSteamFail = true;
+                                        break;
+
+                                    default:
+                                        Log.Error($"Invalid argument *{sanitizedArg.argument}*");
+                                        return 0;
+							    }
                             }
-
-                            if (arg.StartsWith("--secret")) secret = SanitizeArg(arg);
-
-                            if (arg.StartsWith("--debug")) ChameleonAPI.debug = true;
-
-                            if (arg.StartsWith("--stopOnSteamFail")) ChameleonSteam.stopOnSteamFail = true;
                         }
                     }
 
@@ -55,17 +76,32 @@ namespace BlazeChameleon {
             return 1;
         }
 
-        private static string SanitizeArg(string arg) {
+        private static Argument SanitizeArg(string arg) {
             string sArg = arg;
+            Argument ret = new Argument();
 
-            if (sArg.Contains("=")) sArg = sArg.Remove(0, sArg.IndexOf("=") + 1);
+            if (sArg.Contains("=")) { 
+                ret.argument = sArg.Split('=')[0];
+                sArg = sArg.Remove(0, sArg.IndexOf("=") + 1);
+            } else { 
+                ret.argument = sArg;
+                return ret;
+            }
+
             
             if (sArg.Contains("\"")) {
                 if (sArg.StartsWith("\"")) sArg = sArg.Remove(0,1);
                 if (sArg.EndsWith('\"')) sArg.Remove(sArg.Length-1, 1);
 			}
 
-            return sArg;
+            ret.value = sArg;
+
+            return ret;
 		}
+
+        private struct Argument {
+            public string argument;
+            public string value;
+        }
     }
 }
