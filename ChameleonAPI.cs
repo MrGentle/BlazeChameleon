@@ -160,6 +160,7 @@ namespace BlazeChameleon {
                 string json = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                 if (!data.CallSuccess) context.Response.StatusCode = 500;
                 await context.Response.SendResponseAsync(json).ConfigureAwait(false);
+                Log.Info($"Responded: {context.Request.RemoteEndPoint}s requested {context.Request.Endpoint}");
             } catch(Exception ex) {
                 context.Response.StatusCode = 500;
                 await context.Response.SendResponseAsync(ex.ToString()).ConfigureAwait(false);

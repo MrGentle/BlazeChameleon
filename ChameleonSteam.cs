@@ -20,10 +20,12 @@ namespace BlazeChameleon {
         }
 
         public static async Task<ChameleonCall> GetUserCount() {
+            InitializeSteam();
             return await ChameleonCall.CallAsync(SteamUserStats.PlayerCountAsync());
         }
 
         public static async Task<ChameleonCall> GetLeaderboard(string lbName) {
+            InitializeSteam();
             ChameleonCall leaderboardCall = await ChameleonCall.CallAsync(SteamUserStats.FindLeaderboardAsync(lbName));
             if (leaderboardCall.CallSuccess) {
                 Leaderboard leaderboard = (Leaderboard)leaderboardCall.Data;
