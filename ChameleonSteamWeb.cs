@@ -10,14 +10,14 @@ using Grapevine;
 
 namespace BlazeChameleon {
     public class ChameleonSteamWeb {
-        /*
-         * Reset the call counter on date change
-        */
         public static int callsToday = 0;
         public static int callLimit = 100_000;
         public static DateTime today = new DateTime();
         public static bool ServiceAvailable = false;
 
+        /*
+         * Reset the call counter on date change
+        */
         public static void HandleDateChange() {
             if (today.Date != DateTime.Now.Date) {
                 callsToday = 0;

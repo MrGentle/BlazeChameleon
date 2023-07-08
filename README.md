@@ -4,27 +4,34 @@ A cross-platform CLI which runs an API that interfaces with SteamWorks and Steam
 With this you can fetch any data that is available to a game at runtime(Lobbies, leaderboards, etc) and any data that is available from the SteamWeb API.
 
 The main caveat being that you must have a logged in Steam client running in the same environment as the application to be able to access SteamWorks.
+<br>
+<br>
 
 Please contact me if you find a good way to dockerize the application, or a way to run it with Steam in headless mode.
 
-
 Feel free to contribute.
+
+## Main features
+* Rest service
+* Interfaces with SteamWorks by posing as a game client
+* Interfaces with SteamWeb
+* Automatically cycles API keys
 
 ## Building
 1. Clone the repository.
 2. Add a static class named Config. Example:
-```csharp
-public static class Config {
-    public const uint APP_ID = 553310; 
-    public static string[] STEAM_WEB_API_KEYS = {"Key1", "Key2", ... };
-}
-```
+	```csharp
+	public static class Config {
+	    public const uint APP_ID = 553310; 
+	    public static string[] STEAM_WEB_API_KEYS = {"Key1", "Key2", ... };
+	}
+	```
 3. Build for your target.
 ``dotnet build BlazeChameleon.csproj --runtime linux-x64``
 
 
 ## Running
-Steam needs to be running and logged into to be able to interface with steamworks.
+Steam needs to be running and logged into to be able to interface with SteamWorks.
 > BlazeChameleon --listen --port=8080
 
 You can also supply the ``--secret`` argument to secure your routes with a password.
