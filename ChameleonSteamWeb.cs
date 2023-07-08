@@ -6,6 +6,7 @@ using SteamWebAPI2.Utilities;
 using System.Linq;
 using Steam.Models.SteamCommunity;
 using Pastel;
+using Grapevine;
 
 namespace BlazeChameleon {
     public class ChameleonSteamWeb {
@@ -94,7 +95,7 @@ namespace BlazeChameleon {
 
 
         // API CALLS
-        public static async Task<ChameleonCall> GetPlayerSummaries(ulong[] steamIDs) {
+        public static async Task<ChameleonResult> GetPlayerSummaries(ulong[] steamIDs) {
             try {
                 CheckOverCallLimit();
                 int batches = (int)Math.Ceiling(steamIDs.Length / 100f);
@@ -111,13 +112,13 @@ namespace BlazeChameleon {
                     callsToday++;
                 }
                 
-                return new ChameleonCall(true, summaries.ToArray());
+                return new ChameleonResult(HttpStatusCode.Ok, summaries.ToArray());
             } catch (Exception e) {
-                return new ChameleonCall(false, $"Steam Web: {e.Message}");
+                return new ChameleonResult(HttpStatusCode.InternalServerError, $"Steam Web: {e.Message}");
             }
         }
 
-        public static async Task<ChameleonCall> GetUserStats(ulong steamid) {
+        public static async Task<ChameleonResult> GetUserStats(ulong steamid) {
             try {
                 CheckOverCallLimit();
                 var factory = GetFactory();
@@ -125,10 +126,10 @@ namespace BlazeChameleon {
                 var statsInterface = factory.CreateSteamWebInterface<SteamUserStats>();
                 var userStatsResponse = await statsInterface.GetUserStatsForGameAsync(steamid, Config.APP_ID);
                 callsToday++;
-                return new ChameleonCall(true, userStatsResponse.Data);
+                return new ChameleonResult(HttpStatusCode.Ok, userStatsResponse.Data);
             }
             catch (Exception e) {
-                return new ChameleonCall(false, $"Steam Web: {e.Message}");
+                return new ChameleonResult(HttpStatusCode.InternalServerError, $"Steam Web: {e.Message}");
             }
         }
     }

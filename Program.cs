@@ -1,5 +1,11 @@
-﻿using System;
+﻿using Grapevine;
+using Pastel;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace BlazeChameleon {
     
@@ -8,8 +14,8 @@ namespace BlazeChameleon {
 
         static int Main(string[] args) {
             if (args.Length == 0) {
-                Log.Error("Please supply BlazeChameleon with arguments (\"blazechameleon --help\" for more info)");
-                return 0;
+                Log.Warning("Please supply BlazeChameleon with arguments (Run \"blazechameleon --help\" for more info)");
+                args = new [] {"-l"};
             }
 
 
@@ -53,9 +59,20 @@ namespace BlazeChameleon {
                         }
                     }
 
-                    ChameleonAPI.InitializeClient(port, secret);
+                    try {
+                        ChameleonAPI.InitializeClient(port, secret);
+                    } catch(ObjectDisposedException ex) {
+                        Log.Error($"Failed initializing client. Make sure you're running BlazeChameleon with proper permissions. {ex.Message}");
+                        return 0;
+                    } catch(Exception ex) {
+                        Log.Error(ex.Message);
+                        return 0;
+                    }
                     break;
-
+                case "-r":
+                case "--routes":
+                    PrintRoutes();
+                    return 0;
                 case "-h":
                 case "--help":
                 default:
@@ -68,12 +85,29 @@ namespace BlazeChameleon {
                         "   Optional params: --port --secret --debug --stopOnSteamFail\n" +
                         "   Usage: -l --port=8080 --secret=\"yoursecret\" --debug\n" +
                         "\n" +
+                        "------------------------------------------\n" +
+                        " Print available routes\n" +
+                        "\n" +
+                        "   -r\n" +
+						"   --routes\n" +
                         "------------------------------------------\n"
                     );
 
                     return 0;
             }
             return 1;
+        }
+
+        private static void PrintRoutes() {
+            Console.WriteLine(" Available routes:");
+            MemberInfo[] members = typeof(ChameleonAPI.Routes).GetMembers();            
+
+            foreach(MemberInfo member in members) {
+                RestRouteAttribute route = (RestRouteAttribute)member.GetCustomAttribute(typeof(RestRouteAttribute));
+                if (route != null) {
+                    Console.WriteLine($"    {(route.Name != "" ? $"({route.Name}) " : "")}{route.HttpMethod.ToString().ToUpper()}: {route.RouteTemplate.Pastel("#AAAAAA")}");
+                }
+            }
         }
 
         private static Argument SanitizeArg(string arg) {

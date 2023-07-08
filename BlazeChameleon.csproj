@@ -15,7 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Facepunch.Steamworks.Win64">
+    <Reference Condition="$([MSBuild]::IsOSPlatform('Linux')) or $([MSBuild]::IsOSPlatform('OSX'))" Include="Facepunch.Steamworks.Posix">
+      <HintPath>Facepunch.Steamworks\Facepunch.Steamworks.Posix.dll</HintPath>
+    </Reference>
+    <Reference Condition="$([MSBuild]::IsOSPlatform('Windows'))" Include="Facepunch.Steamworks.Win64">
       <HintPath>Facepunch.Steamworks\Facepunch.Steamworks.Win64.dll</HintPath>
     </Reference>
   </ItemGroup>

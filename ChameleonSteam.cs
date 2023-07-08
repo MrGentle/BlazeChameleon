@@ -2,6 +2,8 @@
 using Steamworks;
 using System.Threading.Tasks;
 using Steamworks.Data;
+using System.Threading;
+using Grapevine;
 
 namespace BlazeChameleon {
     public class ChameleonSteam {
@@ -13,24 +15,32 @@ namespace BlazeChameleon {
                     SteamClient.Init(Config.APP_ID);
                 }
                 catch (Exception e) {
-                    if (stopOnSteamFail) throw e;
-                    else Log.Error($"Failed initializing steam client:\n{e.Message}");
+                    if (stopOnSteamFail) {
+                        Log.Warning($"Failed initializing steam client:\n{e.Message} - Rebooting..");
+                        throw e;
+                    }
+                    else {
+                        Log.Warning($"Failed initializing steam client:\n{e.Message}");
+                        Log.Info("Continuing operations.\n We will try to reconnect whenever a request is recieved for a steamwork resource");
+                    }
                 }
             }
         }
 
-        public static async Task<ChameleonCall> GetUserCount() {
-            InitializeSteam();
+        public static void Shutdown() {
+            SteamClient.Shutdown();
+        }
+
+        public static async Task<ChameleonResult> GetUserCount() {
             return await ChameleonCall.CallAsync(SteamUserStats.PlayerCountAsync());
         }
 
-        public static async Task<ChameleonCall> GetLeaderboard(string lbName) {
-            InitializeSteam();
-            ChameleonCall leaderboardCall = await ChameleonCall.CallAsync(SteamUserStats.FindLeaderboardAsync(lbName));
-            if (leaderboardCall.CallSuccess) {
+        public static async Task<ChameleonResult> GetLeaderboard(string lbName, CancellationToken token) {
+            ChameleonResult leaderboardCall = await ChameleonCall.CallAsync(SteamUserStats.FindLeaderboardAsync(lbName));
+            if (leaderboardCall.StatusCode == HttpStatusCode.Ok) {
                 Leaderboard leaderboard = (Leaderboard)leaderboardCall.Data;
-                ChameleonCall entriesCall = await ChameleonCall.CallAsync(leaderboard.GetScoresAsync(leaderboard.EntryCount));
-                if (entriesCall.CallSuccess) {
+                ChameleonResult entriesCall = await ChameleonCall.CallAsync(leaderboard.GetScoresAsync(leaderboard.EntryCount));
+                if (entriesCall.StatusCode == HttpStatusCode.Ok) {
                     LeaderboardEntry[] entries = entriesCall.Data;
                     
                     ChameleonEntry[] chameleonEntries = new ChameleonEntry[leaderboard.EntryCount];
@@ -40,7 +50,7 @@ namespace BlazeChameleon {
                     }
 
                     ChameleonLeaderboard finalLB = new ChameleonLeaderboard(lbName, leaderboard.EntryCount, chameleonEntries);
-                    return new ChameleonCall(true, finalLB);
+                    return new ChameleonResult(200, finalLB);
                 } else return entriesCall;
             } else return leaderboardCall;
         }

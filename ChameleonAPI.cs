@@ -9,6 +9,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Runtime.CompilerServices;
 using Pastel;
+using System.Threading;
 
 namespace BlazeChameleon {
     class ChameleonAPI {
@@ -53,7 +54,8 @@ namespace BlazeChameleon {
             */
             [RestRoute("Get", "/api/steamworks/leaderboards/{leaderboardname}")]
             public async Task GetLeaderboard(IHttpContext context) {
-                ChameleonCall res = await ChameleonSteam.GetLeaderboard(context.Request.PathParameters["leaderboardname"]);
+                
+                ChameleonResult res = await ChameleonSteam.GetLeaderboard(context.Request.PathParameters["leaderboardname"], context.CancellationToken);
                 context.Locals.TryAdd("data", res);
             }
 
@@ -65,7 +67,7 @@ namespace BlazeChameleon {
             public async Task GetGlobalStats(IHttpContext context) {
                 var parseok = ulong.TryParse(context.Request.PathParameters["steamid"], out ulong steamid);
                 if (parseok) {
-                    ChameleonCall res = await ChameleonSteamWeb.GetUserStats(steamid);
+                    ChameleonResult res = await ChameleonSteamWeb.GetUserStats(steamid);
                     context.Locals.TryAdd("data", res);
                 } else {
                     await context.Response.SendResponseAsync($"Failed converting steamid to ulong").ConfigureAwait(false);
@@ -80,7 +82,7 @@ namespace BlazeChameleon {
             public async Task GetUserStats(IHttpContext context) {
                 try {
                     ulong[] ulongIDs = ((JArray)context.Locals.Get("body")).ToObject<ulong[]>();
-                    ChameleonCall res = await ChameleonSteamWeb.GetPlayerSummaries(ulongIDs.ToArray());
+                    ChameleonResult res = await ChameleonSteamWeb.GetPlayerSummaries(ulongIDs.ToArray());
                     context.Locals.TryAdd("data", res);
                 } catch (Exception ex) {
                     await context.Response.SendResponseAsync($"Failed converting body to ulong array: {ex.Message}").ConfigureAwait(false);
@@ -93,7 +95,7 @@ namespace BlazeChameleon {
             */
             [RestRoute("Get", "/api/steamworks/users/count")]
             public async Task GetUserCount(IHttpContext context) {
-                ChameleonCall res = await ChameleonSteam.GetUserCount();
+                ChameleonResult res = await ChameleonSteam.GetUserCount();
                 context.Locals.TryAdd("data", res);
             }
         }
@@ -135,7 +137,9 @@ namespace BlazeChameleon {
                         throw new TimeoutException();
                     }
 				}
-			}
+			} else {
+                ChameleonSteam.InitializeSteam();
+            }
         }
 
         public static async Task Authorize(IHttpContext context) {
@@ -156,13 +160,13 @@ namespace BlazeChameleon {
 
         public static async Task SendResponse(IHttpContext context) {
             try {
-                ChameleonCall data = (ChameleonCall)context.Locals.Get("data");
+                ChameleonResult data = (ChameleonResult)context.Locals.Get("data");
                 string json = JsonConvert.SerializeObject(data, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-                if (!data.CallSuccess) context.Response.StatusCode = 500;
+                context.Response.StatusCode = data.StatusCode;
                 await context.Response.SendResponseAsync(json).ConfigureAwait(false);
-                Log.Info($"Responded: {context.Request.RemoteEndPoint}s requested {context.Request.Endpoint}");
+                Log.Info($"Responded to: [{context.Request.RemoteEndPoint}]s requested {context.Request.Endpoint} ({data.StatusCode})");
             } catch(Exception ex) {
-                context.Response.StatusCode = 500;
+                context.Response.StatusCode = HttpStatusCode.InternalServerError;
                 await context.Response.SendResponseAsync(ex.ToString()).ConfigureAwait(false);
             }
         }
@@ -174,40 +178,45 @@ namespace BlazeChameleon {
 
 
     public class ChameleonCall {
-        public bool CallSuccess;
+
+        public static async Task<ChameleonResult> CallAsync<T>(Task<T> task, string errorMsg = "Internal server error", string nullMsg = "Result was null") {
+            try { 
+                object data = await task;
+                return new ChameleonResult(HttpStatusCode.Ok, data == null ? nullMsg : data);
+            } catch (Exception e) {
+                return new ChameleonResult(HttpStatusCode.InternalServerError, $"{errorMsg}: {e.Message}");
+            }
+        }
+
+        public static ChameleonResult Call(Delegate method, string errorMsg = "Internal server error", params object[] parameters) {
+            try { 
+                var data = method.DynamicInvoke(parameters);
+                return new ChameleonResult(HttpStatusCode.Ok, data);
+            } catch (Exception e) {
+                return new ChameleonResult(HttpStatusCode.InternalServerError, $"{errorMsg}: {e.Message}");
+            }
+        }
+
+        
+    }
+
+    public class ChameleonResult {
+        public int StatusCode = HttpStatusCode.Ok;
         public dynamic Data;
         public string Error;
 
-        public ChameleonCall(bool success, dynamic data) {
-            CallSuccess = success;
+        public ChameleonResult(int statusCode, dynamic data) {
+            StatusCode = statusCode;
             Data = data;
         }
 
-        public ChameleonCall(bool _success, string _err) {
-            CallSuccess = _success;
-            Error = _err;
-        }
-
-        public static async Task<ChameleonCall> CallAsync<T>(Task<T> task, string errorMsg = "Internal server error", string nullMsg = "Result was null") {
-            try { 
-                object data = await task;
-                return new ChameleonCall(true, data == null ? nullMsg : data);
-            } catch (Exception e) {
-                return new ChameleonCall(false, $"{errorMsg}: {e.Message}");
-            }
-        }
-
-        public static ChameleonCall Call(Delegate method, string errorMsg = "Internal server error", params object[] parameters) {
-            try { 
-                var data = method.DynamicInvoke(parameters);
-                return new ChameleonCall(true, data);
-            } catch (Exception e) {
-                return new ChameleonCall(false, $"{errorMsg}: {e.Message}");
-            }
+        public ChameleonResult(int statusCode, string error) {
+            StatusCode = statusCode;
+            Error = error;
         }
 
         public dynamic GetResult() {
-            if (CallSuccess) return Data;
+            if (StatusCode == 200) return Data;
             else return Error;
         }
     }
